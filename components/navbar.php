@@ -17,8 +17,8 @@ $config = getConfig();
             <div class="hidden md:flex md:items-center md:space-x-6">
                 <a href="#" class="hover:text-blue-600">Home</a>
                 <a href="#" class="hover:text-blue-600">Features</a>
-                <a href="#" class="hover:text-blue-600">Pricing</a>
-                <a href="#" class="hover:text-blue-600">Contact</a>
+                <a href="/type/20?games=50" class="hover:text-blue-600">Pricing</a>
+                <a href="/about" class="hover:text-blue-600">about</a>
                 <button class="ml-4 px-4 py-1.5 rounded-md bg-blue-600 text-white hover:bg-blue-700">Sign in</button>
             </div>
 

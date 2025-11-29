@@ -21,6 +21,7 @@
     },
     "scripts": {
         "web": "php serve.php",
+        "vanilla": "php build-vanilla.php",
         "post-autoload-dump": [
         "echo 'Autoload dumped successfully!'"
     ],

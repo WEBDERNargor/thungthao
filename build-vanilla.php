@@ -11,11 +11,11 @@ if (!is_dir($pagesDir)) {
 }
 
 // Bootstrap application environment so we can render pages to static HTML
-require $rootDir . '/vendor/autoload.php';
-require $rootDir . '/includes/CoreFunction.php';
-require $rootDir . '/includes/Database.php';
-require $rootDir . '/includes/Layout.php';
-require $rootDir . '/global.php';
+require_once $rootDir . '/vendor/autoload.php';
+require_once $rootDir . '/includes/CoreFunction.php';
+require_once $rootDir . '/includes/Database.php';
+require_once $rootDir . '/includes/Layout.php';
+require_once $rootDir . '/global.php';
 
 session_start();
 $config = getConfig();
@@ -467,12 +467,13 @@ function generateEntrypoint($destPath, $pageRelativePath, array $paramNames)
     if ($depth > 0) {
         $code .= "\$root = dirname(\$root, {$depth});\n";
     }
-    $code .= "require \$root . '/vendor/autoload.php';\n";
-    $code .= "require \$root . '/config.php';\n";
-    $code .= "require \$root . '/includes/CoreFunction.php';\n";
-    $code .= "require \$root . '/includes/Database.php';\n";
-    $code .= "require \$root . '/includes/Layout.php';\n";
-    $code .= "require \$root . '/global.php';\n";
+    $code .= "require_once \$root . '/vendor/autoload.php';\n";
+    $code .= "require_once \$root . '/config.php';\n";
+    $code .= "require_once \$root . '/includes/CoreFunction.php';\n";
+    $code .= "require_once \$root . '/includes/Database.php';\n";
+    $code .= "require_once \$root . '/includes/Layout.php';\n";
+    $code .= "require_once \$root . '/includes/VanillaUrl.php';\n";
+    $code .= "require_once \$root . '/global.php';\n";
     $code .= "\n";
     $code .= "use App\\includes\\Layout;\n";
     $code .= "use App\\includes\\Database;\n";
@@ -511,7 +512,9 @@ function generateEntrypoint($destPath, $pageRelativePath, array $paramNames)
     $code .= "include \$root . '/pages/{$pageRelativePath}';\n";
     $code .= "\$content = ob_get_clean();\n";
     $code .= "\$layout->setContent(\$content);\n";
-    $code .= "echo \$layout->render();\n";
+    $code .= "\$html = \$layout->render();\n";
+    $code .= "\$html = vanilla_rewriteHtmlUrls(\$html, \$root . '/pages', '" . addslashes($destPath) . "');\n";
+    $code .= "echo \$html;\n";
     $code .= "";
 
     return $code;
@@ -543,18 +546,11 @@ foreach ($iterator as $file) {
         mkdir($destDir, 0777, true);
     }
 
-    if (empty($allParamNames)) {
-        // No dynamic params in path: render full HTML into destination file
-        $html = renderStaticPage($rootDir, $relative);
-        $html = rewriteHtmlUrls($html, $pagesDir, $destRelative);
-        file_put_contents($destFull, $html);
-        echo "[vanilla] built static {$relative} -> build/{$destRelative}\n";
-    } else {
-        // Dynamic route: compile to a static template with full HTML
-        $compiled = renderDynamicPageToStatic($rootDir, $relative, $allParamNames, $destRelative);
-        file_put_contents($destFull, $compiled);
-        echo "[vanilla] built dynamic {$relative} -> build/{$destRelative} (static template)\n";
-    }
+    // Generate a PHP entrypoint so original page/layout PHP (including DB access)
+    // still runs at runtime instead of being baked into static HTML.
+    $entryCode = generateEntrypoint($destRelative, $relative, $allParamNames);
+    file_put_contents($destFull, $entryCode);
+    echo "[vanilla] built entry {$relative} -> build/{$destRelative}\n";
 }
 
 echo "[vanilla] build completed in {$buildDir}\n";

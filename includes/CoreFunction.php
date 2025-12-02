@@ -65,3 +65,18 @@ function show_error_log($value)
         error_log($value);
     }
 }
+
+function useParams()
+{
+    if (!empty($GLOBALS['__VANILLA_BUILD_PARAMS__']) && is_array($GLOBALS['__VANILLA_BUILD_PARAMS__'])) {
+        return $GLOBALS['__VANILLA_BUILD_PARAMS__'];
+    }
+
+    global $router;
+
+    if (isset($router) && method_exists($router, 'getParams')) {
+        return $router->getParams();
+    }
+
+    return $_GET ?? [];
+}
